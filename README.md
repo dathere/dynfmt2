@@ -1,8 +1,13 @@
-# dynfmt - Dynamic Formatting in Rust
+# dynfmt2 - Dynamic Formatting in Rust
 
 A crate for formatting strings dynamically.
 
-`dynfmt` provides several implementations for formats that implement a subset of the
+`dynfmt2` is a fork of the [`dynfmt`](https://github.com/jan-auer/dynfmt) crate, with some improvements and changes:
+
+- the `lazy_static` dependency is removed, and the code is updated to work using `std::sync::OnceLock` instead
+- MSRV is set to Rust 1.70.0 to use `std::sync::OnceLock`
+
+`dynfmt2` provides several implementations for formats that implement a subset of the
 [`std::fmt`] facilities. Parsing of the format string and arguments checks are performed at
 runtime. There is also the option to implement new formats.
 
@@ -13,7 +18,7 @@ of provided implementations.
 ## Usage
 
 ```rust
-use dynfmt::{Format, NoopFormat};
+use dynfmt2::{Format, NoopFormat};
 
 let formatted = NoopFormat.format("hello, world", &["unused"]);
 assert_eq!("hello, world", formatted.expect("formatting failed"));
@@ -42,7 +47,7 @@ format, the specs can be parameterized with formatting parameters.
 
 ```rust
 use std::str::MatchIndices;
-use dynfmt::{ArgumentSpec, Format, Error};
+use dynfmt2::{ArgumentSpec, Format, Error};
 
 struct HashFormat;
 
@@ -70,9 +75,9 @@ assert_eq!("hello, world", formatted.expect("formatting failed"));
 
 [`std::fmt`]: https://doc.rust-lang.org/stable/std/fmt/
 [`serde::Serialize`]: https://docs.rs/serde/latest/serde/trait.Serialize.html
-[`Format`]: https://docs.rs/dynfmt/latest/dynfmt/trait.Format.html
-[`ArgumentSpec`]: https://docs.rs/dynfmt/latest/dynfmt/struct.ArgumentSpec.html
-[`PythonFormat`]: https://docs.rs/dynfmt/latest/dynfmt/python/struct.PythonFormat.html
-[`SimpleCurlyFormat`]: https://docs.rs/dynfmt/latest/dynfmt/curly/struct.SimpleCurlyFormat.html
+[`Format`]: https://docs.rs/dynfmt2/latest/dynfmt2/trait.Format.html
+[`ArgumentSpec`]: https://docs.rs/dynfmt2/latest/dynfmt2/struct.ArgumentSpec.html
+[`PythonFormat`]: https://docs.rs/dynfmt2/latest/dynfmt2/python/struct.PythonFormat.html
+[`SimpleCurlyFormat`]: https://docs.rs/dynfmt2/latest/dynfmt2/curly/struct.SimpleCurlyFormat.html
 
 License: MIT
