@@ -108,6 +108,7 @@ pub use crate::curly::SimpleCurlyFormat;
 ///
 /// [`FormatArgs`]: trait.FormatArgs.html
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[derive(Default)]
 pub enum Position<'a> {
     /// The next indexed argument in line.
     ///
@@ -116,6 +117,7 @@ pub enum Position<'a> {
     /// afterwards continue after the last auto argument.
     ///
     /// Requires the argument list to be indexable by numbers.
+    #[default]
     Auto,
 
     /// Index argument at the given offset.
@@ -129,11 +131,6 @@ pub enum Position<'a> {
     Key(&'a str),
 }
 
-impl Default for Position<'_> {
-    fn default() -> Self {
-        Position::Auto
-    }
-}
 
 impl fmt::Display for Position<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -197,10 +194,12 @@ impl<'a> Error<'a> {
 
 /// Formatting types for arguments.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Default)]
 pub enum FormatType {
     /// Print the [display] representation of the argument.
     ///
     /// [display]: https://doc.rust-lang.org/stable/std/fmt/trait.Display.html
+    #[default]
     Display,
 
     /// Print the [debug] representation of the argument.
@@ -274,11 +273,6 @@ impl FormatType {
     }
 }
 
-impl Default for FormatType {
-    fn default() -> Self {
-        FormatType::Display
-    }
-}
 
 impl fmt::Display for FormatType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -447,17 +441,14 @@ where
 /// Defaults to `Alignment::Right`.
 #[allow(missing_docs)]
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Default)]
 pub enum Alignment {
     Left,
     Center,
+    #[default]
     Right,
 }
 
-impl Default for Alignment {
-    fn default() -> Self {
-        Alignment::Right
-    }
-}
 
 /// The value of a formatting parameter, used within [`ArgumentSpec`].
 ///
