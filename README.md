@@ -2,10 +2,15 @@
 
 A crate for formatting strings dynamically.
 
-`dynfmt2` is a fork of the [`dynfmt`](https://github.com/jan-auer/dynfmt) crate, with some improvements and changes:
+> `dynfmt2` is a fork of the [`dynfmt`](https://github.com/jan-auer/dynfmt) crate, which has not been updated since Mar 2021, with some improvements and changes:
+>
+> - the `lazy_static` dependency is removed, and the code is updated to work using `std::sync::OnceLock` instead
+> - MSRV is set to Rust 1.70.0 to use `std::sync::OnceLock`
+> - Rust 2021 edition
+> - bumped dependencies
+> - numerous clippy lints applied
 
-- the `lazy_static` dependency is removed, and the code is updated to work using `std::sync::OnceLock` instead
-- MSRV is set to Rust 1.70.0 to use `std::sync::OnceLock`
+---
 
 `dynfmt2` provides several implementations for formats that implement a subset of the
 [`std::fmt`] facilities. Parsing of the format string and arguments checks are performed at
