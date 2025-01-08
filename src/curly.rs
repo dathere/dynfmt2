@@ -11,12 +11,14 @@ use crate::{ArgumentResult, ArgumentSpec, Error, Format, Position};
 
 static CURLY_RE: OnceLock<Regex> = OnceLock::new();
 
+#[inline]
 fn get_curly_regex() -> &'static Regex {
     CURLY_RE.get_or_init(|| Regex::new(r"\{(?P<key>\w+)?\}").unwrap())
 }
 
 fn parse_position(key: &str) -> Position<'_> {
-    key.parse().map_or_else(|_| Position::Key(key), Position::Index)
+    key.parse()
+        .map_or_else(|_| Position::Key(key), Position::Index)
 }
 
 fn parse_next(captures: Captures<'_>) -> ArgumentSpec<'_> {

@@ -11,6 +11,7 @@ use crate::{Alignment, ArgumentResult, ArgumentSpec, Count, Error, Format, Forma
 
 static PYTHON_RE: OnceLock<Regex> = OnceLock::new();
 
+#[inline]
 fn get_python_regex() -> &'static Regex {
     PYTHON_RE.get_or_init(|| {
         Regex::new(
@@ -33,8 +34,7 @@ fn parse_next(captures: Captures<'_>) -> ArgumentResult<'_> {
 
     let position = captures
         .name("key")
-        .map(|m| Position::Key(m.as_str()))
-        .unwrap_or_else(|| Position::Auto);
+        .map_or_else(|| Position::Auto, |m| Position::Key(m.as_str()));
 
     let format = match &captures["type"] {
         "d" | "i" | "u" => FormatType::Display,
