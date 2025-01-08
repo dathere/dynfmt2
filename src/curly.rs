@@ -16,16 +16,13 @@ fn get_curly_regex() -> &'static Regex {
 }
 
 fn parse_position(key: &str) -> Position<'_> {
-    key.parse()
-        .map(Position::Index)
-        .unwrap_or_else(|_| Position::Key(key))
+    key.parse().map_or_else(|_| Position::Key(key), Position::Index)
 }
 
 fn parse_next(captures: Captures<'_>) -> ArgumentSpec<'_> {
     let position = captures
         .name("key")
-        .map(|m| parse_position(m.as_str()))
-        .unwrap_or_else(|| Position::Auto);
+        .map_or_else(|| Position::Auto, |m| parse_position(m.as_str()));
 
     let group = captures.get(0).unwrap();
     ArgumentSpec::new(group.start(), group.end()).with_position(position)
