@@ -25,7 +25,10 @@ impl<'a> FmtProxy<'a> {
         unsafe {
             FmtProxy {
                 data: &*(data as *const T as *const ()),
-                func: std::mem::transmute(func),
+                func: std::mem::transmute::<
+                    for<'b, 'c> fn(&T, &'b mut fmt::Formatter<'c>) -> fmt::Result,
+                    for<'b, 'c> fn(&(), &'b mut fmt::Formatter<'c>) -> fmt::Result
+                >(func),
             }
         }
     }
@@ -255,13 +258,13 @@ pub enum SerializeSeq<'a, W: io::Write> {
 }
 
 #[cfg(feature = "json")]
-impl<'a, W: io::Write> serde::ser::SerializeSeq for SerializeSeq<'a, W> {
+impl<W: io::Write> serde::ser::SerializeSeq for SerializeSeq<'_, W> {
     type Ok = ();
     type Error = FormatError;
 
-    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    fn serialize_element<T>(&mut self, value: &T) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         match self {
             SerializeSeq::Compact(compound) => compound.serialize_element(value),
@@ -286,13 +289,13 @@ pub enum SerializeTuple<'a, W: io::Write> {
 }
 
 #[cfg(feature = "json")]
-impl<'a, W: io::Write> serde::ser::SerializeTuple for SerializeTuple<'a, W> {
+impl<W: io::Write> serde::ser::SerializeTuple for SerializeTuple<'_, W> {
     type Ok = ();
     type Error = FormatError;
 
-    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    fn serialize_element<T>(&mut self, value: &T) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         match self {
             SerializeTuple::Compact(compound) => compound.serialize_element(value),
@@ -317,13 +320,13 @@ pub enum SerializeTupleStruct<'a, W: io::Write> {
 }
 
 #[cfg(feature = "json")]
-impl<'a, W: io::Write> serde::ser::SerializeTupleStruct for SerializeTupleStruct<'a, W> {
+impl<W: io::Write> serde::ser::SerializeTupleStruct for SerializeTupleStruct<'_, W> {
     type Ok = ();
     type Error = FormatError;
 
-    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    fn serialize_field<T>(&mut self, value: &T) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         match self {
             SerializeTupleStruct::Compact(compound) => compound.serialize_field(value),
@@ -348,13 +351,13 @@ pub enum SerializeTupleVariant<'a, W: io::Write> {
 }
 
 #[cfg(feature = "json")]
-impl<'a, W: io::Write> serde::ser::SerializeTupleVariant for SerializeTupleVariant<'a, W> {
+impl<W: io::Write> serde::ser::SerializeTupleVariant for SerializeTupleVariant<'_, W> {
     type Ok = ();
     type Error = FormatError;
 
-    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    fn serialize_field<T>(&mut self, value: &T) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         match self {
             SerializeTupleVariant::Compact(compound) => compound.serialize_field(value),
@@ -379,13 +382,13 @@ pub enum SerializeMap<'a, W: io::Write> {
 }
 
 #[cfg(feature = "json")]
-impl<'a, W: io::Write> serde::ser::SerializeMap for SerializeMap<'a, W> {
+impl<W: io::Write> serde::ser::SerializeMap for SerializeMap<'_, W> {
     type Ok = ();
     type Error = FormatError;
 
-    fn serialize_key<T: ?Sized>(&mut self, key: &T) -> Result<(), Self::Error>
+    fn serialize_key<T>(&mut self, key: &T) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         match self {
             SerializeMap::Compact(compound) => compound.serialize_key(key),
@@ -394,9 +397,9 @@ impl<'a, W: io::Write> serde::ser::SerializeMap for SerializeMap<'a, W> {
         .map_err(Into::into)
     }
 
-    fn serialize_value<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    fn serialize_value<T>(&mut self, value: &T) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         match self {
             SerializeMap::Compact(compound) => compound.serialize_value(value),
@@ -413,14 +416,14 @@ impl<'a, W: io::Write> serde::ser::SerializeMap for SerializeMap<'a, W> {
         .map_err(Into::into)
     }
 
-    fn serialize_entry<K: ?Sized, V: ?Sized>(
+    fn serialize_entry<K, V>(
         &mut self,
         key: &K,
         value: &V,
     ) -> Result<(), Self::Error>
     where
-        K: Serialize,
-        V: Serialize,
+        K: Serialize + ?Sized,
+        V: Serialize + ?Sized,
     {
         match self {
             SerializeMap::Compact(compound) => compound.serialize_entry(key, value),
@@ -437,17 +440,17 @@ pub enum SerializeStruct<'a, W: io::Write> {
 }
 
 #[cfg(feature = "json")]
-impl<'a, W: io::Write> serde::ser::SerializeStruct for SerializeStruct<'a, W> {
+impl<W: io::Write> serde::ser::SerializeStruct for SerializeStruct<'_, W> {
     type Ok = ();
     type Error = FormatError;
 
-    fn serialize_field<T: ?Sized>(
+    fn serialize_field<T>(
         &mut self,
         key: &'static str,
         value: &T,
     ) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         match self {
             SerializeStruct::Compact(compound) => compound.serialize_field(key, value),
@@ -480,17 +483,17 @@ pub enum SerializeStructVariant<'a, W: io::Write> {
 }
 
 #[cfg(feature = "json")]
-impl<'a, W: io::Write> serde::ser::SerializeStructVariant for SerializeStructVariant<'a, W> {
+impl<W: io::Write> serde::ser::SerializeStructVariant for SerializeStructVariant<'_, W> {
     type Ok = ();
     type Error = FormatError;
 
-    fn serialize_field<T: ?Sized>(
+    fn serialize_field<T>(
         &mut self,
         key: &'static str,
         value: &T,
     ) -> Result<(), Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         match self {
             SerializeStructVariant::Compact(compound) => compound.serialize_field(key, value),
@@ -706,9 +709,9 @@ where
         self.serialize_unit()
     }
 
-    fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Self::Ok, Self::Error>
+    fn serialize_some<T>(self, value: &T) -> Result<Self::Ok, Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         value.serialize(self)
     }
@@ -734,18 +737,18 @@ where
         self.serialize_str(variant)
     }
 
-    fn serialize_newtype_struct<T: ?Sized>(
+    fn serialize_newtype_struct<T>(
         self,
         _name: &'static str,
         value: &T,
     ) -> Result<Self::Ok, Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         value.serialize(self)
     }
 
-    fn serialize_newtype_variant<T: ?Sized>(
+    fn serialize_newtype_variant<T>(
         self,
         _name: &'static str,
         _variant_index: u32,
@@ -753,7 +756,7 @@ where
         _value: &T,
     ) -> Result<Self::Ok, Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         Err(FormatError::Type(self.ty))
     }
