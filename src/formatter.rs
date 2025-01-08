@@ -87,7 +87,7 @@ impl<W> FormatterTarget<W>
 where
     W: io::Write,
 {
-    pub fn new(write: W) -> Self {
+    pub const fn new(write: W) -> Self {
         FormatterTarget::Write(write)
     }
 
@@ -170,12 +170,12 @@ where
         }
     }
 
-    pub fn with_type(mut self, ty: FormatType) -> Self {
+    pub const fn with_type(mut self, ty: FormatType) -> Self {
         self.ty = ty;
         self
     }
 
-    pub fn with_alternate(mut self, alternate: bool) -> Self {
+    pub const fn with_alternate(mut self, alternate: bool) -> Self {
         self.alternate = alternate;
         self
     }

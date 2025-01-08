@@ -253,7 +253,7 @@ pub enum FormatType {
 
 impl FormatType {
     /// Returns the name of this formatting type.
-    pub fn name(self) -> &'static str {
+    pub const fn name(self) -> &'static str {
         match self {
             FormatType::Display => "string",
             FormatType::Debug => "debug",
@@ -405,7 +405,7 @@ where
     A: FormatArgs,
 {
     /// Creates a new arguments access.
-    pub fn new(args: A) -> Self {
+    pub const fn new(args: A) -> Self {
         ArgumentAccess { args, index: 0 }
     }
 
@@ -499,7 +499,7 @@ impl<'a> ArgumentSpec<'a> {
     /// Sets the argument position. Defaults to [`Position::Auto`].
     ///
     /// [`Position::Auto`]: enum.Position.html#variant.Auto
-    pub fn with_position(mut self, position: Position<'a>) -> Self {
+    pub const fn with_position(mut self, position: Position<'a>) -> Self {
         self.position = position;
         self
     }
@@ -507,7 +507,7 @@ impl<'a> ArgumentSpec<'a> {
     /// Sets the formatting type. Defaults to [`FormatType::Display`].
     ///
     /// [`FormatType::Display`]: enum.FormatType.html#variant.Display
-    pub fn with_format(mut self, format: FormatType) -> Self {
+    pub const fn with_format(mut self, format: FormatType) -> Self {
         self.format = format;
         self
     }
@@ -515,25 +515,25 @@ impl<'a> ArgumentSpec<'a> {
     /// Switch the formatter to [alternate] mode.
     ///
     /// [alternate]: https://doc.rust-lang.org/stable/std/fmt/struct.Formatter.html#method.alternate
-    pub fn with_alternate(mut self, alternate: bool) -> Self {
+    pub const fn with_alternate(mut self, alternate: bool) -> Self {
         self.alternate = alternate;
         self
     }
 
     /// Always print a sign characters in front of numbers.
-    pub fn with_sign(mut self, sign: bool) -> Self {
+    pub const fn with_sign(mut self, sign: bool) -> Self {
         self.add_sign = sign;
         self
     }
 
     /// Activate sign-aware zero padding.
-    pub fn with_zeros(mut self, pad_zero: bool) -> Self {
+    pub const fn with_zeros(mut self, pad_zero: bool) -> Self {
         self.pad_zero = pad_zero;
         self
     }
 
     /// Set the fill character. Defaults to `' '` (a space).
-    pub fn with_fill(mut self, fill_char: char) -> Self {
+    pub const fn with_fill(mut self, fill_char: char) -> Self {
         self.fill_char = fill_char;
         self
     }
@@ -541,7 +541,7 @@ impl<'a> ArgumentSpec<'a> {
     /// Set alignment within the width of this format. Defaults to `Alignment::Right`.
     ///
     /// [`Alignment::Right`]: enum.Alignment.html#variant.Right
-    pub fn with_alignment(mut self, alignment: Alignment) -> Self {
+    pub const fn with_alignment(mut self, alignment: Alignment) -> Self {
         self.alignment = alignment;
         self
     }
@@ -551,24 +551,24 @@ impl<'a> ArgumentSpec<'a> {
     /// If the formatted argument is smaller than the threshold, the argument is padded with the
     /// fill character. If the argument is numeric and `with_zeros` is specified, it is padded with
     /// zeros instead.
-    pub fn with_width(mut self, width: Option<Count<'a>>) -> Self {
+    pub const fn with_width(mut self, width: Option<Count<'a>>) -> Self {
         self.width = width;
         self
     }
 
     /// Set the precision for floating point values. Defaults to arbitrary precision.
-    pub fn with_precision(mut self, precision: Option<Count<'a>>) -> Self {
+    pub const fn with_precision(mut self, precision: Option<Count<'a>>) -> Self {
         self.precision = precision;
         self
     }
 
     /// The start index of this specification in the format string.
-    pub fn start(&self) -> usize {
+    pub const fn start(&self) -> usize {
         self.range.0
     }
 
     /// The end index of this specification in the format string.
-    pub fn end(&self) -> usize {
+    pub const fn end(&self) -> usize {
         self.range.1
     }
 
