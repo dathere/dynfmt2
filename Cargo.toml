@@ -1,15 +1,16 @@
 [package]
-name = "dynfmt"
-version = "0.1.5"
-authors = ["Jan Michael Auer <mail@jauer.org>"]
+name = "dynfmt2"
+version = "0.2.0"
+authors = ["Joel Natividad"]
 edition = "2021"
 license = "MIT"
+rust-version = "1.70.0"
 readme = "README.md"
 repository = "https://github.com/jan-auer/dynfmt"
 homepage = "https://github.com/jan-auer/dynfmt"
 documentation = "https://docs.rs/dynfmt"
 description = """
-A crate for formatting strings dynamically.
+A crate for formatting strings dynamically. Forked from dynfmt.
 """
 
 [package.metadata.docs.rs]
@@ -17,14 +18,13 @@ all-features = true
 
 [dependencies]
 erased-serde = "0.4"
-lazy_static = { version = "1.4", optional = true }
 regex = { version = "1", optional = true }
 serde = "1"
 serde_json = { version = "1", optional = true }
-thiserror = "1.0"
+thiserror = "2.0"
 
 [features]
 default = ["json"]
 json = ["serde_json"]
-python = ["regex", "lazy_static"]
-curly = ["regex", "lazy_static"]
+python = ["regex"]
+curly = ["regex"]
