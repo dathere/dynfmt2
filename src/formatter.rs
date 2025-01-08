@@ -24,7 +24,7 @@ impl<'a> FmtProxy<'a> {
     pub fn new<T>(data: &'a T, func: FormatFn<T>) -> Self {
         unsafe {
             FmtProxy {
-                data: &*(data as *const T as *const ()),
+                data: &*(data as *const T).cast::<()>(),
                 func: std::mem::transmute::<
                     for<'b, 'c> fn(&T, &'b mut fmt::Formatter<'c>) -> fmt::Result,
                     for<'b, 'c> fn(&(), &'b mut fmt::Formatter<'c>) -> fmt::Result,
