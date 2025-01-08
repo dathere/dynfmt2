@@ -5,25 +5,26 @@
 //! [`SimpleCurlyFormat`]: struct.SimpleCurlyFormat.html
 
 use regex::{CaptureMatches, Captures, Regex};
+use std::sync::OnceLock;
 
 use crate::{ArgumentResult, ArgumentSpec, Error, Format, Position};
 
-lazy_static::lazy_static! {
-/// The regular expression used for parsing simple curly format strings.
-    static ref PYTHON_RE: Regex = Regex::new(r"\{(?P<key>\w+)?\}").unwrap();
+static CURLY_RE: OnceLock<Regex> = OnceLock::new();
+
+#[inline]
+fn get_curly_regex() -> &'static Regex {
+    CURLY_RE.get_or_init(|| Regex::new(r"\{(?P<key>\w+)?\}").unwrap())
 }
 
 fn parse_position(key: &str) -> Position<'_> {
     key.parse()
-        .map(Position::Index)
-        .unwrap_or_else(|_| Position::Key(key))
+        .map_or_else(|_| Position::Key(key), Position::Index)
 }
 
 fn parse_next(captures: Captures<'_>) -> ArgumentSpec<'_> {
     let position = captures
         .name("key")
-        .map(|m| parse_position(m.as_str()))
-        .unwrap_or_else(|| Position::Auto);
+        .map_or_else(|| Position::Auto, |m| parse_position(m.as_str()));
 
     let group = captures.get(0).unwrap();
     ArgumentSpec::new(group.start(), group.end()).with_position(position)
@@ -40,7 +41,7 @@ pub struct SimpleCurlyIter<'f> {
 impl<'f> SimpleCurlyIter<'f> {
     fn new(format: &'f str) -> Self {
         SimpleCurlyIter {
-            captures: PYTHON_RE.captures_iter(format),
+            captures: get_curly_regex().captures_iter(format),
         }
     }
 }
@@ -65,7 +66,7 @@ impl<'f> Iterator for SimpleCurlyIter<'f> {
 /// # Example
 ///
 /// ```rust
-/// use dynfmt::{Format, SimpleCurlyFormat};
+/// use dynfmt2::{Format, SimpleCurlyFormat};
 ///
 /// let formatted = SimpleCurlyFormat.format("hello, {}", &["world"]);
 /// assert_eq!("hello, world", formatted.expect("formatting failed"));

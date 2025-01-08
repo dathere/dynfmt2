@@ -1,6 +1,6 @@
 //! A crate for formatting strings dynamically.
 //!
-//! `dynfmt` provides several implementations for formats that implement a subset of the
+//! `dynfmt2` provides several implementations for formats that implement a subset of the
 //! [`std::fmt`] facilities. Parsing of the format string and arguments checks are performed at
 //! runtime. There is also the option to implement new formats.
 //!
@@ -11,7 +11,7 @@
 //! # Usage
 //!
 //! ```rust
-//! use dynfmt::{Format, NoopFormat};
+//! use dynfmt2::{Format, NoopFormat};
 //!
 //! let formatted = NoopFormat.format("hello, world", &["unused"]);
 //! assert_eq!("hello, world", formatted.expect("formatting failed"));
@@ -40,7 +40,7 @@
 //!
 //! ```rust
 //! use std::str::MatchIndices;
-//! use dynfmt::{ArgumentSpec, Format, Error};
+//! use dynfmt2::{ArgumentSpec, Format, Error};
 //!
 //! struct HashFormat;
 //!
@@ -107,7 +107,7 @@ pub use crate::curly::SimpleCurlyFormat;
 /// A Position may borrow they key name from the format string.
 ///
 /// [`FormatArgs`]: trait.FormatArgs.html
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Ord, PartialOrd, Hash, Default)]
 pub enum Position<'a> {
     /// The next indexed argument in line.
     ///
@@ -116,6 +116,7 @@ pub enum Position<'a> {
     /// afterwards continue after the last auto argument.
     ///
     /// Requires the argument list to be indexable by numbers.
+    #[default]
     Auto,
 
     /// Index argument at the given offset.
@@ -129,17 +130,11 @@ pub enum Position<'a> {
     Key(&'a str),
 }
 
-impl Default for Position<'_> {
-    fn default() -> Self {
-        Position::Auto
-    }
-}
-
 impl fmt::Display for Position<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Position::Auto => write!(f, "{{next}}"),
-            Position::Index(index) => write!(f, "{}", index),
+            Position::Index(index) => write!(f, "{index}"),
             Position::Key(key) => f.write_str(key),
         }
     }
@@ -196,11 +191,12 @@ impl<'a> Error<'a> {
 }
 
 /// Formatting types for arguments.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum FormatType {
     /// Print the [display] representation of the argument.
     ///
     /// [display]: https://doc.rust-lang.org/stable/std/fmt/trait.Display.html
+    #[default]
     Display,
 
     /// Print the [debug] representation of the argument.
@@ -257,7 +253,7 @@ pub enum FormatType {
 
 impl FormatType {
     /// Returns the name of this formatting type.
-    pub fn name(self) -> &'static str {
+    pub const fn name(self) -> &'static str {
         match self {
             FormatType::Display => "string",
             FormatType::Debug => "debug",
@@ -271,12 +267,6 @@ impl FormatType {
             FormatType::Object => "object",
             FormatType::Literal(s) => s,
         }
-    }
-}
-
-impl Default for FormatType {
-    fn default() -> Self {
-        FormatType::Display
     }
 }
 
@@ -415,7 +405,7 @@ where
     A: FormatArgs,
 {
     /// Creates a new arguments access.
-    pub fn new(args: A) -> Self {
+    pub const fn new(args: A) -> Self {
         ArgumentAccess { args, index: 0 }
     }
 
@@ -446,17 +436,12 @@ where
 ///
 /// Defaults to `Alignment::Right`.
 #[allow(missing_docs)]
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Default)]
 pub enum Alignment {
     Left,
     Center,
+    #[default]
     Right,
-}
-
-impl Default for Alignment {
-    fn default() -> Self {
-        Alignment::Right
-    }
 }
 
 /// The value of a formatting parameter, used within [`ArgumentSpec`].
@@ -514,7 +499,7 @@ impl<'a> ArgumentSpec<'a> {
     /// Sets the argument position. Defaults to [`Position::Auto`].
     ///
     /// [`Position::Auto`]: enum.Position.html#variant.Auto
-    pub fn with_position(mut self, position: Position<'a>) -> Self {
+    pub const fn with_position(mut self, position: Position<'a>) -> Self {
         self.position = position;
         self
     }
@@ -522,7 +507,7 @@ impl<'a> ArgumentSpec<'a> {
     /// Sets the formatting type. Defaults to [`FormatType::Display`].
     ///
     /// [`FormatType::Display`]: enum.FormatType.html#variant.Display
-    pub fn with_format(mut self, format: FormatType) -> Self {
+    pub const fn with_format(mut self, format: FormatType) -> Self {
         self.format = format;
         self
     }
@@ -530,25 +515,25 @@ impl<'a> ArgumentSpec<'a> {
     /// Switch the formatter to [alternate] mode.
     ///
     /// [alternate]: https://doc.rust-lang.org/stable/std/fmt/struct.Formatter.html#method.alternate
-    pub fn with_alternate(mut self, alternate: bool) -> Self {
+    pub const fn with_alternate(mut self, alternate: bool) -> Self {
         self.alternate = alternate;
         self
     }
 
     /// Always print a sign characters in front of numbers.
-    pub fn with_sign(mut self, sign: bool) -> Self {
+    pub const fn with_sign(mut self, sign: bool) -> Self {
         self.add_sign = sign;
         self
     }
 
     /// Activate sign-aware zero padding.
-    pub fn with_zeros(mut self, pad_zero: bool) -> Self {
+    pub const fn with_zeros(mut self, pad_zero: bool) -> Self {
         self.pad_zero = pad_zero;
         self
     }
 
     /// Set the fill character. Defaults to `' '` (a space).
-    pub fn with_fill(mut self, fill_char: char) -> Self {
+    pub const fn with_fill(mut self, fill_char: char) -> Self {
         self.fill_char = fill_char;
         self
     }
@@ -556,7 +541,7 @@ impl<'a> ArgumentSpec<'a> {
     /// Set alignment within the width of this format. Defaults to `Alignment::Right`.
     ///
     /// [`Alignment::Right`]: enum.Alignment.html#variant.Right
-    pub fn with_alignment(mut self, alignment: Alignment) -> Self {
+    pub const fn with_alignment(mut self, alignment: Alignment) -> Self {
         self.alignment = alignment;
         self
     }
@@ -566,24 +551,24 @@ impl<'a> ArgumentSpec<'a> {
     /// If the formatted argument is smaller than the threshold, the argument is padded with the
     /// fill character. If the argument is numeric and `with_zeros` is specified, it is padded with
     /// zeros instead.
-    pub fn with_width(mut self, width: Option<Count<'a>>) -> Self {
+    pub const fn with_width(mut self, width: Option<Count<'a>>) -> Self {
         self.width = width;
         self
     }
 
     /// Set the precision for floating point values. Defaults to arbitrary precision.
-    pub fn with_precision(mut self, precision: Option<Count<'a>>) -> Self {
+    pub const fn with_precision(mut self, precision: Option<Count<'a>>) -> Self {
         self.precision = precision;
         self
     }
 
     /// The start index of this specification in the format string.
-    pub fn start(&self) -> usize {
+    pub const fn start(&self) -> usize {
         self.range.0
     }
 
     /// The end index of this specification in the format string.
-    pub fn end(&self) -> usize {
+    pub const fn end(&self) -> usize {
         self.range.1
     }
 
@@ -594,7 +579,7 @@ impl<'a> ArgumentSpec<'a> {
         A: FormatArgs,
     {
         if let FormatType::Literal(literal) = self.format {
-            return write!(write, "{}", literal).map_err(Error::Io);
+            return write!(write, "{literal}").map_err(Error::Io);
         }
 
         Formatter::new(write)
@@ -645,7 +630,7 @@ pub trait Format<'f> {
     /// container must implement the [`FormatArgs`] trait.
     ///
     /// ```rust
-    /// use dynfmt::{Format, NoopFormat};
+    /// use dynfmt2::{Format, NoopFormat};
     ///
     /// let formatted = NoopFormat.format("hello, world", &["unused"]);
     /// assert_eq!("hello, world", formatted.expect("formatting failed"));

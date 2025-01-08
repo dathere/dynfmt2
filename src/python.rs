@@ -5,20 +5,28 @@
 //! [`PythonFormat`]: struct.PythonFormat.html
 
 use regex::{CaptureMatches, Captures, Regex};
+use std::sync::OnceLock;
 
 use crate::{Alignment, ArgumentResult, ArgumentSpec, Count, Error, Format, FormatType, Position};
 
-lazy_static::lazy_static! {
-/// The regular expression used for parsing python format strings.
-    static ref PYTHON_RE: Regex = Regex::new(r"(?x)
-        %
-        (?:\((?P<key>\w+)\))?         # Mapping key
-        (?P<flags>[\#0\- +]*)?        # Conversion flags
-        (?P<width>\*|\d+)?            # Minimum field width
-        (?:.(?P<precision>\*|\d+))?   # Precision after decimal point
-        [hlL]*                        # Ignored length modifier
-        (?P<type>[diouxXeEfFgGcrs%])  # Conversion type
-    ").unwrap();
+static PYTHON_RE: OnceLock<Regex> = OnceLock::new();
+
+#[inline]
+fn get_python_regex() -> &'static Regex {
+    PYTHON_RE.get_or_init(|| {
+        Regex::new(
+            r"(?x)
+            %
+            (?:\((?P<key>\w+)\))?         # Mapping key
+            (?P<flags>[\#0\- +]*)?        # Conversion flags
+            (?P<width>\*|\d+)?            # Minimum field width
+            (?:.(?P<precision>\*|\d+))?   # Precision after decimal point
+            [hlL]*                        # Ignored length modifier
+            (?P<type>[diouxXeEfFgGcrs%])  # Conversion type
+        ",
+        )
+        .unwrap()
+    })
 }
 
 fn parse_next(captures: Captures<'_>) -> ArgumentResult<'_> {
@@ -26,8 +34,7 @@ fn parse_next(captures: Captures<'_>) -> ArgumentResult<'_> {
 
     let position = captures
         .name("key")
-        .map(|m| Position::Key(m.as_str()))
-        .unwrap_or_else(|| Position::Auto);
+        .map_or_else(|| Position::Auto, |m| Position::Key(m.as_str()));
 
     let format = match &captures["type"] {
         "d" | "i" | "u" => FormatType::Display,
@@ -95,7 +102,7 @@ pub struct PythonIter<'f> {
 impl<'f> PythonIter<'f> {
     fn new(format: &'f str) -> Self {
         PythonIter {
-            captures: PYTHON_RE.captures_iter(format),
+            captures: get_python_regex().captures_iter(format),
         }
     }
 }
@@ -134,7 +141,7 @@ impl<'f> Iterator for PythonIter<'f> {
 /// # Example
 ///
 /// ```rust
-/// use dynfmt::{Format, PythonFormat};
+/// use dynfmt2::{Format, PythonFormat};
 ///
 /// let formatted = PythonFormat.format("hello, %s", &["world"]);
 /// assert_eq!("hello, world", formatted.expect("formatting failed"));

@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use dynfmt::{Error, FormatType, Position};
+use dynfmt2::{Error, FormatType, Position};
 
 macro_rules! test_fmt {
     ($name:ident, $expected:expr, $error:expr) => {

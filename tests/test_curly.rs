@@ -1,6 +1,6 @@
 #![cfg(feature = "curly")]
 
-use dynfmt::{Format, SimpleCurlyFormat};
+use dynfmt2::{Format, SimpleCurlyFormat};
 
 macro_rules! test_fmt {
     ($name:ident, $expected:expr, $format:expr, $($args:expr),* $(,)*) => {

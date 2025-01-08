@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use dynfmt::{Format, PythonFormat};
+use dynfmt2::{Format, PythonFormat};
 
 macro_rules! test_fmt {
     ($name:ident, $expected:expr, $format:expr, $($args:expr),* $(,)*) => {
