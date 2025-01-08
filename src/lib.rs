@@ -1,6 +1,6 @@
 //! A crate for formatting strings dynamically.
 //!
-//! `dynfmt` provides several implementations for formats that implement a subset of the
+//! `dynfmt2` provides several implementations for formats that implement a subset of the
 //! [`std::fmt`] facilities. Parsing of the format string and arguments checks are performed at
 //! runtime. There is also the option to implement new formats.
 //!
@@ -11,7 +11,7 @@
 //! # Usage
 //!
 //! ```rust
-//! use dynfmt::{Format, NoopFormat};
+//! use dynfmt2::{Format, NoopFormat};
 //!
 //! let formatted = NoopFormat.format("hello, world", &["unused"]);
 //! assert_eq!("hello, world", formatted.expect("formatting failed"));
@@ -40,7 +40,7 @@
 //!
 //! ```rust
 //! use std::str::MatchIndices;
-//! use dynfmt::{ArgumentSpec, Format, Error};
+//! use dynfmt2::{ArgumentSpec, Format, Error};
 //!
 //! struct HashFormat;
 //!
@@ -645,7 +645,7 @@ pub trait Format<'f> {
     /// container must implement the [`FormatArgs`] trait.
     ///
     /// ```rust
-    /// use dynfmt::{Format, NoopFormat};
+    /// use dynfmt2::{Format, NoopFormat};
     ///
     /// let formatted = NoopFormat.format("hello, world", &["unused"]);
     /// assert_eq!("hello, world", formatted.expect("formatting failed"));
