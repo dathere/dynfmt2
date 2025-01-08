@@ -27,7 +27,7 @@ impl<'a> FmtProxy<'a> {
                 data: &*(data as *const T as *const ()),
                 func: std::mem::transmute::<
                     for<'b, 'c> fn(&T, &'b mut fmt::Formatter<'c>) -> fmt::Result,
-                    for<'b, 'c> fn(&(), &'b mut fmt::Formatter<'c>) -> fmt::Result
+                    for<'b, 'c> fn(&(), &'b mut fmt::Formatter<'c>) -> fmt::Result,
                 >(func),
             }
         }
@@ -416,11 +416,7 @@ impl<W: io::Write> serde::ser::SerializeMap for SerializeMap<'_, W> {
         .map_err(Into::into)
     }
 
-    fn serialize_entry<K, V>(
-        &mut self,
-        key: &K,
-        value: &V,
-    ) -> Result<(), Self::Error>
+    fn serialize_entry<K, V>(&mut self, key: &K, value: &V) -> Result<(), Self::Error>
     where
         K: Serialize + ?Sized,
         V: Serialize + ?Sized,
@@ -444,11 +440,7 @@ impl<W: io::Write> serde::ser::SerializeStruct for SerializeStruct<'_, W> {
     type Ok = ();
     type Error = FormatError;
 
-    fn serialize_field<T>(
-        &mut self,
-        key: &'static str,
-        value: &T,
-    ) -> Result<(), Self::Error>
+    fn serialize_field<T>(&mut self, key: &'static str, value: &T) -> Result<(), Self::Error>
     where
         T: Serialize + ?Sized,
     {
@@ -487,11 +479,7 @@ impl<W: io::Write> serde::ser::SerializeStructVariant for SerializeStructVariant
     type Ok = ();
     type Error = FormatError;
 
-    fn serialize_field<T>(
-        &mut self,
-        key: &'static str,
-        value: &T,
-    ) -> Result<(), Self::Error>
+    fn serialize_field<T>(&mut self, key: &'static str, value: &T) -> Result<(), Self::Error>
     where
         T: Serialize + ?Sized,
     {

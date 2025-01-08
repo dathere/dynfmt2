@@ -107,8 +107,7 @@ pub use crate::curly::SimpleCurlyFormat;
 /// A Position may borrow they key name from the format string.
 ///
 /// [`FormatArgs`]: trait.FormatArgs.html
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
-#[derive(Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Ord, PartialOrd, Hash, Default)]
 pub enum Position<'a> {
     /// The next indexed argument in line.
     ///
@@ -130,7 +129,6 @@ pub enum Position<'a> {
     /// Requires the argument list to be indexable by string keys.
     Key(&'a str),
 }
-
 
 impl fmt::Display for Position<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -193,8 +191,7 @@ impl<'a> Error<'a> {
 }
 
 /// Formatting types for arguments.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum FormatType {
     /// Print the [display] representation of the argument.
     ///
@@ -272,7 +269,6 @@ impl FormatType {
         }
     }
 }
-
 
 impl fmt::Display for FormatType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -440,15 +436,13 @@ where
 ///
 /// Defaults to `Alignment::Right`.
 #[allow(missing_docs)]
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[derive(Default)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Default)]
 pub enum Alignment {
     Left,
     Center,
     #[default]
     Right,
 }
-
 
 /// The value of a formatting parameter, used within [`ArgumentSpec`].
 ///
