@@ -12,9 +12,7 @@ use crate::{ArgumentResult, ArgumentSpec, Error, Format, Position};
 static CURLY_RE: OnceLock<Regex> = OnceLock::new();
 
 fn get_curly_regex() -> &'static Regex {
-    CURLY_RE.get_or_init(|| {
-        Regex::new(r"\{(?P<key>\w+)?\}").unwrap()
-    })
+    CURLY_RE.get_or_init(|| Regex::new(r"\{(?P<key>\w+)?\}").unwrap())
 }
 
 fn parse_position(key: &str) -> Position<'_> {

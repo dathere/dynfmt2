@@ -13,7 +13,8 @@ static PYTHON_RE: OnceLock<Regex> = OnceLock::new();
 
 fn get_python_regex() -> &'static Regex {
     PYTHON_RE.get_or_init(|| {
-        Regex::new(r"(?x)
+        Regex::new(
+            r"(?x)
             %
             (?:\((?P<key>\w+)\))?         # Mapping key
             (?P<flags>[\#0\- +]*)?        # Conversion flags
@@ -21,7 +22,9 @@ fn get_python_regex() -> &'static Regex {
             (?:.(?P<precision>\*|\d+))?   # Precision after decimal point
             [hlL]*                        # Ignored length modifier
             (?P<type>[diouxXeEfFgGcrs%])  # Conversion type
-        ").unwrap()
+        ",
+        )
+        .unwrap()
     })
 }
 
