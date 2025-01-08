@@ -50,9 +50,9 @@ pub enum FormatError {
 impl fmt::Display for FormatError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            FormatError::Type(format) => write!(f, "cannot format as {}", format),
-            FormatError::Serde(error) => write!(f, "{}", error),
-            FormatError::Io(error) => write!(f, "{}", error),
+            FormatError::Type(format) => write!(f, "cannot format as {format}"),
+            FormatError::Serde(error) => write!(f, "{error}"),
+            FormatError::Io(error) => write!(f, "{error}"),
         }
     }
 }
@@ -206,9 +206,9 @@ where
         let proxy = FmtProxy::new(value, fmt);
 
         if self.alternate {
-            write!(self.target.as_write(), "{:#}", proxy).map_err(FormatError::Io)
+            write!(self.target.as_write(), "{proxy:#}").map_err(FormatError::Io)
         } else {
-            write!(self.target.as_write(), "{}", proxy).map_err(FormatError::Io)
+            write!(self.target.as_write(), "{proxy}").map_err(FormatError::Io)
         }
     }
 

@@ -134,7 +134,7 @@ impl fmt::Display for Position<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Position::Auto => write!(f, "{{next}}"),
-            Position::Index(index) => write!(f, "{}", index),
+            Position::Index(index) => write!(f, "{index}"),
             Position::Key(key) => f.write_str(key),
         }
     }
@@ -579,7 +579,7 @@ impl<'a> ArgumentSpec<'a> {
         A: FormatArgs,
     {
         if let FormatType::Literal(literal) = self.format {
-            return write!(write, "{}", literal).map_err(Error::Io);
+            return write!(write, "{literal}").map_err(Error::Io);
         }
 
         Formatter::new(write)
