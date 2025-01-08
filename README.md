@@ -42,7 +42,7 @@ format implementations:
  - `python`: Implements the `printf`-like format that python 2 used for formatting strings. See
    [`PythonFormat`] for more information.
  - `curly`: A simple format string syntax using curly braces for arguments. Similar to .NET and
-   Rust, but much less capable. See [`SimpleCurlyFormat`] for mor information.
+   Rust, but much less capable. See [`SimpleCurlyFormat`] for more information.
 
 ## Extensibility
 

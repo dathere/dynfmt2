@@ -57,7 +57,7 @@ impl<'f> Iterator for SimpleCurlyIter<'f> {
 /// Format implementation for simple curly brace based format strings.
 ///
 /// This syntax is a subset of what Python 3, Rust, .NET and many logging libraries use. Each
-/// argument is formated in display mode.
+/// argument is formatted in display mode.
 ///
 ///   1. `{}`: Refers to the next positional argument.
 ///   2. `{0}`: Refers to the argument at index `0`.
