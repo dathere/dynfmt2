@@ -582,11 +582,85 @@ impl<'a> ArgumentSpec<'a> {
             return write!(write, "{literal}").map_err(Error::Io);
         }
 
-        Formatter::new(write)
+        // First, get the width if specified
+        let width = if let Some(width_count) = self.width {
+            match width_count {
+                Count::Value(w) => Some(w),
+                Count::Ref(pos) => {
+                    // Get width from argument
+                    let width_arg = args.get_pos(pos)?;
+                    // Try to convert to usize
+                    let mut width_buffer = Vec::new();
+                    Formatter::new(&mut width_buffer)
+                        .with_type(FormatType::Display)
+                        .format(width_arg)
+                        .map_err(|e| Error::from_serialize(e, pos))?;
+                    let width_str = String::from_utf8(width_buffer)
+                        .map_err(|e| Error::Io(io::Error::new(io::ErrorKind::InvalidData, e)))?;
+                    let width_val = width_str.parse::<usize>().map_err(|_| {
+                        Error::BadData(pos, "width must be a positive integer".to_string())
+                    })?;
+                    Some(width_val)
+                }
+            }
+        } else {
+            None
+        };
+
+        // Then, format the value to a string
+        let mut buffer = Vec::new();
+        Formatter::new(&mut buffer)
             .with_type(self.format)
             .with_alternate(self.alternate)
             .format(args.get_pos(self.position)?)
-            .map_err(|e| Error::from_serialize(e, self.position))
+            .map_err(|e| Error::from_serialize(e, self.position))?;
+
+        let formatted = String::from_utf8(buffer)
+            .map_err(|e| Error::Io(io::Error::new(io::ErrorKind::InvalidData, e)))?;
+
+        // Apply width formatting if specified
+        if let Some(width_val) = width {
+            if formatted.len() < width_val {
+                let padding = width_val - formatted.len();
+                let fill_char = if self.pad_zero && self.alignment != Alignment::Left {
+                    '0'
+                } else {
+                    self.fill_char
+                };
+
+                match self.alignment {
+                    Alignment::Left => {
+                        write!(write, "{}", formatted).map_err(Error::Io)?;
+                        for _ in 0..padding {
+                            write!(write, "{}", self.fill_char).map_err(Error::Io)?;
+                        }
+                    }
+                    Alignment::Right => {
+                        for _ in 0..padding {
+                            write!(write, "{}", fill_char).map_err(Error::Io)?;
+                        }
+                        write!(write, "{}", formatted).map_err(Error::Io)?;
+                    }
+                    Alignment::Center => {
+                        let left_padding = padding / 2;
+                        let right_padding = padding - left_padding;
+                        for _ in 0..left_padding {
+                            write!(write, "{}", self.fill_char).map_err(Error::Io)?;
+                        }
+                        write!(write, "{}", formatted).map_err(Error::Io)?;
+                        for _ in 0..right_padding {
+                            write!(write, "{}", self.fill_char).map_err(Error::Io)?;
+                        }
+                    }
+                }
+            } else {
+                write!(write, "{}", formatted).map_err(Error::Io)?;
+            }
+        } else {
+            write!(write, "{}", formatted).map_err(Error::Io)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -605,6 +679,7 @@ pub type ArgumentResult<'f> = Result<ArgumentSpec<'f>, Error<'f>>;
 /// to format it.
 ///
 /// [`ArgumentSpecs`]: struct.ArgumentSpec.html
+/// [module level]: index.html#extensibility
 pub trait Format<'f> {
     /// The iterator returned by [`iter_args`].
     ///
