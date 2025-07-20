@@ -54,6 +54,38 @@ test_fmt!(number_upper_hex_alt, "hello, 0x2A!", "hello, %#X!", 42);
 test_fmt!(float_lower_exp, "hello, 4.2e0!", "hello, %e!", 4.2);
 test_fmt!(float_upper_exp, "hello, 4.2E0!", "hello, %E!", 4.2);
 
+// Width formatting tests
+test_fmt!(width_right_aligned, "hello,    42!", "hello, %5s!", 42);
+test_fmt!(width_left_aligned, "hello, 42   !", "hello, %-5s!", 42);
+test_fmt!(width_with_zero_padding, "hello, 00042!", "hello, %05s!", 42);
+test_fmt!(
+    width_larger_than_content,
+    "hello,   abc!",
+    "hello, %5s!",
+    "abc"
+);
+test_fmt!(
+    width_smaller_than_content,
+    "hello, abcdef!",
+    "hello, %3s!",
+    "abcdef"
+);
+test_fmt!(width_from_argument, "hello,   42!", "hello, %*s!", 4, 42);
+
+#[test]
+fn test_width_formatting_demo() {
+    // Test that width formatting is working correctly
+    let result = PythonFormat.format("Width: %5s, Left: %-5s, Zero: %05s", &["abc", "def", "42"]);
+    assert_eq!(result.unwrap(), "Width:   abc, Left: def  , Zero: 00042");
+}
+
+#[test]
+fn test_width_formatting_issue_3() {
+    // reported test case for https://github.com/dathere/dynfmt2/issues/3
+    let result = PythonFormat.format("[%5s]", &["A"]);
+    assert_eq!(result.unwrap(), "[    A]");
+}
+
 #[test]
 fn string_display_by_name() {
     let mut args = std::collections::BTreeMap::new();
