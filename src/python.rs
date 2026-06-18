@@ -20,7 +20,7 @@ fn get_python_regex() -> &'static Regex {
             (?:\((?P<key>\w+)\))?         # Mapping key
             (?P<flags>[\#0\- +]*)?        # Conversion flags
             (?P<width>\*|\d+)?            # Minimum field width
-            (?:.(?P<precision>\*|\d+))?   # Precision after decimal point
+            (?:\.(?P<precision>\*|\d+))?  # Precision after decimal point
             [hlL]*                        # Ignored length modifier
             (?P<type>[diouxXeEfFgGcrs%])  # Conversion type
         ",

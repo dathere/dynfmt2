@@ -156,6 +156,7 @@ pub struct Formatter<W> {
     target: FormatterTarget<W>,
     ty: FormatType,
     alternate: bool,
+    precision: Option<usize>,
 }
 
 impl<W> Formatter<W>
@@ -167,6 +168,7 @@ where
             target: FormatterTarget::new(write),
             ty: FormatType::Display,
             alternate: false,
+            precision: None,
         }
     }
 
@@ -177,6 +179,13 @@ where
 
     pub const fn with_alternate(mut self, alternate: bool) -> Self {
         self.alternate = alternate;
+        self
+    }
+
+    /// Sets the precision forwarded to `std::fmt` (e.g. decimal places for floats,
+    /// truncation length for strings). `None` leaves precision unspecified.
+    pub const fn with_precision(mut self, precision: Option<usize>) -> Self {
+        self.precision = precision;
         self
     }
 
@@ -205,11 +214,16 @@ where
     fn fmt_internal<T>(&mut self, value: &T, fmt: FormatFn<T>) -> Result<(), FormatError> {
         let proxy = FmtProxy::new(value, fmt);
 
-        if self.alternate {
-            write!(self.target.as_write(), "{proxy:#}").map_err(FormatError::Io)
-        } else {
-            write!(self.target.as_write(), "{proxy}").map_err(FormatError::Io)
+        // The precision (when set) is forwarded into the inner `std::fmt` call via the
+        // proxy, so types like f64 and str apply it natively (decimals / truncation).
+        let write = self.target.as_write();
+        match (self.alternate, self.precision) {
+            (false, None) => write!(write, "{proxy}"),
+            (true, None) => write!(write, "{proxy:#}"),
+            (false, Some(precision)) => write!(write, "{0:.1$}", proxy, precision),
+            (true, Some(precision)) => write!(write, "{0:#.1$}", proxy, precision),
         }
+        .map_err(FormatError::Io)
     }
 
     // TODO: Implement this

@@ -582,36 +582,24 @@ impl<'a> ArgumentSpec<'a> {
             return write!(write, "{literal}").map_err(Error::Io);
         }
 
-        // First, get the width if specified
-        let width = if let Some(width_count) = self.width {
-            match width_count {
-                Count::Value(w) => Some(w),
-                Count::Ref(pos) => {
-                    // Get width from argument
-                    let width_arg = args.get_pos(pos)?;
-                    // Try to convert to usize
-                    let mut width_buffer = Vec::new();
-                    Formatter::new(&mut width_buffer)
-                        .with_type(FormatType::Display)
-                        .format(width_arg)
-                        .map_err(|e| Error::from_serialize(e, pos))?;
-                    let width_str = String::from_utf8(width_buffer)
-                        .map_err(|e| Error::Io(io::Error::new(io::ErrorKind::InvalidData, e)))?;
-                    let width_val = width_str.parse::<usize>().map_err(|_| {
-                        Error::BadData(pos, "width must be a positive integer".to_string())
-                    })?;
-                    Some(width_val)
-                }
-            }
-        } else {
-            None
-        };
+        // Resolve width and precision, pulling from arguments for `*` references.
+        // Order matters: width is consumed before precision before the value itself,
+        // matching printf's `%*.*f`.
+        let width = self
+            .width
+            .map(|count| resolve_count(count, args, "width"))
+            .transpose()?;
+        let precision = self
+            .precision
+            .map(|count| resolve_count(count, args, "precision"))
+            .transpose()?;
 
         // Then, format the value to a string
         let mut buffer = Vec::new();
         Formatter::new(&mut buffer)
             .with_type(self.format)
             .with_alternate(self.alternate)
+            .with_precision(precision)
             .format(args.get_pos(self.position)?)
             .map_err(|e| Error::from_serialize(e, self.position))?;
 
@@ -620,8 +608,10 @@ impl<'a> ArgumentSpec<'a> {
 
         // Apply width formatting if specified
         if let Some(width_val) = width {
-            if formatted.len() < width_val {
-                let padding = width_val - formatted.len();
+            // Width is measured in characters, not bytes, so multi-byte UTF-8 pads correctly.
+            let formatted_chars = formatted.chars().count();
+            if formatted_chars < width_val {
+                let padding = width_val - formatted_chars;
                 let fill_char = if self.pad_zero && self.alignment != Alignment::Left {
                     '0'
                 } else {
@@ -661,6 +651,33 @@ impl<'a> ArgumentSpec<'a> {
         }
 
         Ok(())
+    }
+}
+
+/// Resolves a [`Count`] to a concrete value, pulling and parsing an argument for
+/// [`Count::Ref`] (the `*` form). `what` names the parameter for error messages.
+fn resolve_count<'a, A>(
+    count: Count<'a>,
+    args: &mut ArgumentAccess<A>,
+    what: &str,
+) -> Result<usize, Error<'a>>
+where
+    A: FormatArgs,
+{
+    match count {
+        Count::Value(value) => Ok(value),
+        Count::Ref(pos) => {
+            let arg = args.get_pos(pos)?;
+            let mut buffer = Vec::new();
+            Formatter::new(&mut buffer)
+                .with_type(FormatType::Display)
+                .format(arg)
+                .map_err(|e| Error::from_serialize(e, pos))?;
+            let text = String::from_utf8(buffer)
+                .map_err(|e| Error::Io(io::Error::new(io::ErrorKind::InvalidData, e)))?;
+            text.parse::<usize>()
+                .map_err(|_| Error::BadData(pos, format!("{what} must be a positive integer")))
+        }
     }
 }
 
@@ -729,12 +746,12 @@ pub trait Format<'f> {
 
         for spec in iter {
             let spec = spec?;
-            buffer.extend(format[last_match..spec.start()].as_bytes());
+            buffer.extend(&format.as_bytes()[last_match..spec.start()]);
             spec.format_into(&mut buffer, &mut access)?;
             last_match = spec.end();
         }
 
-        buffer.extend(format[last_match..].as_bytes());
+        buffer.extend(&format.as_bytes()[last_match..]);
         Ok(Cow::Owned(unsafe { String::from_utf8_unchecked(buffer) }))
     }
 }

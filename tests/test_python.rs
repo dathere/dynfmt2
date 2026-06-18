@@ -72,17 +72,27 @@ test_fmt!(
 );
 test_fmt!(width_from_argument, "hello,   42!", "hello, %*s!", 4, 42);
 
+// Precision formatting tests
+test_fmt!(precision_float, "1.23", "%.2f", 1.23456);
+test_fmt!(precision_float_padded, "[    1.23]", "[%8.2f]", 1.23456);
+test_fmt!(precision_zero_padded, "00001.23", "%08.2f", 1.23456);
+test_fmt!(precision_from_argument, "1.23", "%.*f", 2.0, 1.23456);
+test_fmt!(precision_string_truncates, "hel", "%.3s", "hello");
+
+// Width is measured in characters, not bytes (multi-byte UTF-8)
+test_fmt!(width_unicode_chars, "[ café]", "[%5s]", "café");
+
 #[test]
 fn test_width_formatting_demo() {
     // Test that width formatting is working correctly
-    let result = PythonFormat.format("Width: %5s, Left: %-5s, Zero: %05s", &["abc", "def", "42"]);
+    let result = PythonFormat.format("Width: %5s, Left: %-5s, Zero: %05s", ["abc", "def", "42"]);
     assert_eq!(result.unwrap(), "Width:   abc, Left: def  , Zero: 00042");
 }
 
 #[test]
 fn test_width_formatting_issue_3() {
     // reported test case for https://github.com/dathere/dynfmt2/issues/3
-    let result = PythonFormat.format("[%5s]", &["A"]);
+    let result = PythonFormat.format("[%5s]", ["A"]);
     assert_eq!(result.unwrap(), "[    A]");
 }
 
