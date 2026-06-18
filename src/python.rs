@@ -20,7 +20,7 @@ fn get_python_regex() -> &'static Regex {
             (?:\((?P<key>\w+)\))?         # Mapping key
             (?P<flags>[\#0\- +]*)?        # Conversion flags
             (?P<width>\*|\d+)?            # Minimum field width
-            (?:.(?P<precision>\*|\d+))?   # Precision after decimal point
+            (?:\.(?P<precision>\*|\d+))?  # Precision after decimal point
             [hlL]*                        # Ignored length modifier
             (?P<type>[diouxXeEfFgGcrs%])  # Conversion type
         ",
@@ -36,7 +36,8 @@ fn parse_next(captures: Captures<'_>) -> ArgumentResult<'_> {
         .name("key")
         .map_or_else(|| Position::Auto, |m| Position::Key(m.as_str()));
 
-    let format = match &captures["type"] {
+    let conversion = &captures["type"];
+    let format = match conversion {
         "d" | "i" | "u" => FormatType::Display,
         "o" => FormatType::Octal,
         "x" => FormatType::LowerHex,
@@ -49,6 +50,10 @@ fn parse_next(captures: Captures<'_>) -> ArgumentResult<'_> {
         "%" => FormatType::Literal("%"),
         s => return Err(Error::BadFormat(s.chars().next().unwrap_or_default())),
     };
+
+    // For `%s`/`%r`, precision truncates the converted output to N characters
+    // (independent of the argument type), matching Python's `%`-formatting.
+    let precision_truncates = matches!(conversion, "s" | "r");
 
     let mut alternate = false;
     let mut pad_zero = false;
@@ -86,7 +91,8 @@ fn parse_next(captures: Captures<'_>) -> ArgumentResult<'_> {
         .with_alignment(alignment)
         .with_sign(sign)
         .with_width(width)
-        .with_precision(precision);
+        .with_precision(precision)
+        .with_precision_truncates(precision_truncates);
 
     Ok(spec)
 }

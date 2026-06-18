@@ -474,6 +474,7 @@ pub struct ArgumentSpec<'a> {
     alignment: Alignment,
     width: Option<Count<'a>>,
     precision: Option<Count<'a>>,
+    precision_truncates: bool,
 }
 
 impl<'a> ArgumentSpec<'a> {
@@ -493,6 +494,7 @@ impl<'a> ArgumentSpec<'a> {
             alignment: Alignment::default(),
             width: None,
             precision: None,
+            precision_truncates: false,
         }
     }
 
@@ -562,6 +564,15 @@ impl<'a> ArgumentSpec<'a> {
         self
     }
 
+    /// Sets whether precision truncates the converted output to N characters
+    /// (Python `%s`/`%r` semantics) instead of being forwarded to `std::fmt`
+    /// (which would apply type-dependent rules such as float decimal places).
+    /// Defaults to `false`.
+    pub const fn with_precision_truncates(mut self, precision_truncates: bool) -> Self {
+        self.precision_truncates = precision_truncates;
+        self
+    }
+
     /// The start index of this specification in the format string.
     pub const fn start(&self) -> usize {
         self.range.0
@@ -582,29 +593,24 @@ impl<'a> ArgumentSpec<'a> {
             return write!(write, "{literal}").map_err(Error::Io);
         }
 
-        // First, get the width if specified
-        let width = if let Some(width_count) = self.width {
-            match width_count {
-                Count::Value(w) => Some(w),
-                Count::Ref(pos) => {
-                    // Get width from argument
-                    let width_arg = args.get_pos(pos)?;
-                    // Try to convert to usize
-                    let mut width_buffer = Vec::new();
-                    Formatter::new(&mut width_buffer)
-                        .with_type(FormatType::Display)
-                        .format(width_arg)
-                        .map_err(|e| Error::from_serialize(e, pos))?;
-                    let width_str = String::from_utf8(width_buffer)
-                        .map_err(|e| Error::Io(io::Error::new(io::ErrorKind::InvalidData, e)))?;
-                    let width_val = width_str.parse::<usize>().map_err(|_| {
-                        Error::BadData(pos, "width must be a positive integer".to_string())
-                    })?;
-                    Some(width_val)
-                }
-            }
-        } else {
+        // Resolve width and precision, pulling from arguments for `*` references.
+        // Order matters: width is consumed before precision before the value itself,
+        // matching printf's `%*.*f`.
+        let width = self
+            .width
+            .map(|count| resolve_count(count, args, "width"))
+            .transpose()?;
+        let precision = self
+            .precision
+            .map(|count| resolve_count(count, args, "precision"))
+            .transpose()?;
+
+        // String-style conversions (`%s`/`%r`) truncate the converted output below;
+        // numeric conversions forward precision to `std::fmt` (e.g. float decimals).
+        let formatter_precision = if self.precision_truncates {
             None
+        } else {
+            precision
         };
 
         // Then, format the value to a string
@@ -612,16 +618,29 @@ impl<'a> ArgumentSpec<'a> {
         Formatter::new(&mut buffer)
             .with_type(self.format)
             .with_alternate(self.alternate)
+            .with_precision(formatter_precision)
             .format(args.get_pos(self.position)?)
             .map_err(|e| Error::from_serialize(e, self.position))?;
 
-        let formatted = String::from_utf8(buffer)
+        let mut formatted = String::from_utf8(buffer)
             .map_err(|e| Error::Io(io::Error::new(io::ErrorKind::InvalidData, e)))?;
+
+        // Python `%s`/`%r` precision truncates the converted output to N characters,
+        // independent of the argument's underlying type (so e.g. `%.3s` of 12345 is "123").
+        if self.precision_truncates {
+            if let Some(precision_val) = precision {
+                if formatted.chars().count() > precision_val {
+                    formatted = formatted.chars().take(precision_val).collect();
+                }
+            }
+        }
 
         // Apply width formatting if specified
         if let Some(width_val) = width {
-            if formatted.len() < width_val {
-                let padding = width_val - formatted.len();
+            // Width is measured in characters, not bytes, so multi-byte UTF-8 pads correctly.
+            let formatted_chars = formatted.chars().count();
+            if formatted_chars < width_val {
+                let padding = width_val - formatted_chars;
                 let fill_char = if self.pad_zero && self.alignment != Alignment::Left {
                     '0'
                 } else {
@@ -661,6 +680,33 @@ impl<'a> ArgumentSpec<'a> {
         }
 
         Ok(())
+    }
+}
+
+/// Resolves a [`Count`] to a concrete value, pulling and parsing an argument for
+/// [`Count::Ref`] (the `*` form). `what` names the parameter for error messages.
+fn resolve_count<'a, A>(
+    count: Count<'a>,
+    args: &mut ArgumentAccess<A>,
+    what: &str,
+) -> Result<usize, Error<'a>>
+where
+    A: FormatArgs,
+{
+    match count {
+        Count::Value(value) => Ok(value),
+        Count::Ref(pos) => {
+            let arg = args.get_pos(pos)?;
+            let mut buffer = Vec::new();
+            Formatter::new(&mut buffer)
+                .with_type(FormatType::Display)
+                .format(arg)
+                .map_err(|e| Error::from_serialize(e, pos))?;
+            let text = String::from_utf8(buffer)
+                .map_err(|e| Error::Io(io::Error::new(io::ErrorKind::InvalidData, e)))?;
+            text.parse::<usize>()
+                .map_err(|_| Error::BadData(pos, format!("{what} must be a positive integer")))
+        }
     }
 }
 
@@ -729,12 +775,12 @@ pub trait Format<'f> {
 
         for spec in iter {
             let spec = spec?;
-            buffer.extend(format[last_match..spec.start()].as_bytes());
+            buffer.extend(&format.as_bytes()[last_match..spec.start()]);
             spec.format_into(&mut buffer, &mut access)?;
             last_match = spec.end();
         }
 
-        buffer.extend(format[last_match..].as_bytes());
+        buffer.extend(&format.as_bytes()[last_match..]);
         Ok(Cow::Owned(unsafe { String::from_utf8_unchecked(buffer) }))
     }
 }
