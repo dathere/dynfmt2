@@ -87,7 +87,7 @@ Each lives in its own module and is just a parser producing `ArgumentSpec`s via 
 - `NoopFormat` (in `lib.rs`) — passes text through unchanged; the minimal trait example.
 
 Regexes are compiled once and cached in a `OnceLock` (`get_python_regex` / `get_curly_regex`) —
-note this fork deliberately replaced `lazy_static` with `std::sync::OnceLock` (hence MSRV 1.70).
+note this fork deliberately replaced `lazy_static` with `std::sync::OnceLock` (stable since 1.70).
 
 ## Tests
 
@@ -101,6 +101,6 @@ exact text of `Error`/`FormatError` messages.
 
 ## Conventions
 
-- MSRV is **Rust 1.70.0** (`rust-version` in `Cargo.toml`) — do not use newer std APIs.
-- Edition 2021.
+- MSRV is **Rust 1.85.0** (`rust-version` in `Cargo.toml`), required by the 2024 edition.
+- Edition 2024.
 - Keep new functionality feature-gated and ensure it compiles/tests under `--no-default-features`.

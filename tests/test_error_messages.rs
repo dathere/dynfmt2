@@ -72,8 +72,4 @@ test_fmt!(
     "error formatting argument '42': %x",
     Error::BadData(Position::Index(42), "%x".into())
 );
-test_fmt!(
-    io_error,
-    "oops",
-    Error::Io(std::io::Error::new(std::io::ErrorKind::Other, "oops"))
-);
+test_fmt!(io_error, "oops", Error::Io(std::io::Error::other("oops")));
