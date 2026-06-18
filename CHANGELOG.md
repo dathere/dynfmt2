@@ -4,7 +4,7 @@
 
 - Migrate to the Rust 2024 edition (MSRV is now 1.85.0).
 - Fix Python `%`-formatting precision and width handling:
-  - Apply precision for floats (`%.2f`) and strings (`%.3s`, `%.*f`), which was previously parsed then silently dropped.
+  - Apply precision for floats (`%.2f`, `%.*f`) and strings (`%.3s`), which was previously parsed then silently dropped.
   - Measure width in characters rather than bytes, so multi-byte UTF-8 (e.g. `[%5s]` of `"café"`) pads correctly.
   - Require a literal dot before the precision in the regex, so malformed specs like `%5,2f` are no longer accepted.
   - Truncate `%s`/`%r` output to the precision length regardless of the argument's Rust type (matching Python's `%s`/repr behavior).
