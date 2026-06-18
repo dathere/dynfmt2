@@ -101,6 +101,5 @@ exact text of `Error`/`FormatError` messages.
 
 ## Conventions
 
-- MSRV is **Rust 1.85.0** (`rust-version` in `Cargo.toml`), required by the 2024 edition.
-- Edition 2024.
+- Edition 2024, which requires **Rust 1.85.0** or newer. Note there is no `rust-version` field in `Cargo.toml`, so the MSRV is not enforced by Cargo.
 - Keep new functionality feature-gated and ensure it compiles/tests under `--no-default-features`.
