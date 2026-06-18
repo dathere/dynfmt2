@@ -78,6 +78,10 @@ test_fmt!(precision_float_padded, "[    1.23]", "[%8.2f]", 1.23456);
 test_fmt!(precision_zero_padded, "00001.23", "%08.2f", 1.23456);
 test_fmt!(precision_from_argument, "1.23", "%.*f", 2.0, 1.23456);
 test_fmt!(precision_string_truncates, "hel", "%.3s", "hello");
+// `%s` precision truncates the converted output regardless of the argument type.
+test_fmt!(precision_string_truncates_int, "123", "%.3s", 12345);
+// `%r` precision truncates the (JSON) representation, like Python's repr truncation.
+test_fmt!(precision_repr_truncates, "[1,", "%.3r", [1, 2, 3]);
 
 // Width is measured in characters, not bytes (multi-byte UTF-8)
 test_fmt!(width_unicode_chars, "[ café]", "[%5s]", "café");

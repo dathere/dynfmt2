@@ -474,6 +474,7 @@ pub struct ArgumentSpec<'a> {
     alignment: Alignment,
     width: Option<Count<'a>>,
     precision: Option<Count<'a>>,
+    precision_truncates: bool,
 }
 
 impl<'a> ArgumentSpec<'a> {
@@ -493,6 +494,7 @@ impl<'a> ArgumentSpec<'a> {
             alignment: Alignment::default(),
             width: None,
             precision: None,
+            precision_truncates: false,
         }
     }
 
@@ -562,6 +564,15 @@ impl<'a> ArgumentSpec<'a> {
         self
     }
 
+    /// Sets whether precision truncates the converted output to N characters
+    /// (Python `%s`/`%r` semantics) instead of being forwarded to `std::fmt`
+    /// (which would apply type-dependent rules such as float decimal places).
+    /// Defaults to `false`.
+    pub const fn with_precision_truncates(mut self, precision_truncates: bool) -> Self {
+        self.precision_truncates = precision_truncates;
+        self
+    }
+
     /// The start index of this specification in the format string.
     pub const fn start(&self) -> usize {
         self.range.0
@@ -594,17 +605,35 @@ impl<'a> ArgumentSpec<'a> {
             .map(|count| resolve_count(count, args, "precision"))
             .transpose()?;
 
+        // String-style conversions (`%s`/`%r`) truncate the converted output below;
+        // numeric conversions forward precision to `std::fmt` (e.g. float decimals).
+        let formatter_precision = if self.precision_truncates {
+            None
+        } else {
+            precision
+        };
+
         // Then, format the value to a string
         let mut buffer = Vec::new();
         Formatter::new(&mut buffer)
             .with_type(self.format)
             .with_alternate(self.alternate)
-            .with_precision(precision)
+            .with_precision(formatter_precision)
             .format(args.get_pos(self.position)?)
             .map_err(|e| Error::from_serialize(e, self.position))?;
 
-        let formatted = String::from_utf8(buffer)
+        let mut formatted = String::from_utf8(buffer)
             .map_err(|e| Error::Io(io::Error::new(io::ErrorKind::InvalidData, e)))?;
+
+        // Python `%s`/`%r` precision truncates the converted output to N characters,
+        // independent of the argument's underlying type (so e.g. `%.3s` of 12345 is "123").
+        if self.precision_truncates {
+            if let Some(precision_val) = precision {
+                if formatted.chars().count() > precision_val {
+                    formatted = formatted.chars().take(precision_val).collect();
+                }
+            }
+        }
 
         // Apply width formatting if specified
         if let Some(width_val) = width {
