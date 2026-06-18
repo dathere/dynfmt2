@@ -4,7 +4,6 @@ version = "0.3.0"
 authors = ["Joel Natividad"]
 edition = "2024"
 license = "MIT"
-rust-version = "1.85.0"
 readme = "README.md"
 repository = "https://github.com/dathere/dynfmt2"
 homepage = "https://github.com/dathere/dynfmt2"
