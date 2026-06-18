@@ -30,7 +30,7 @@ Argument values are `erased_serde` trait objects serialized THROUGH `Formatter<W
 `Serializer`), which is how arbitrary `Serialize` values get rendered.
 
 Regexes are compiled once into a `OnceLock` (`get_python_regex`/`get_curly_regex`). This fork
-deliberately dropped `lazy_static` for `std::sync::OnceLock` — that choice sets MSRV 1.70.
+deliberately dropped `lazy_static` for `std::sync::OnceLock`.
 
 See also: `mem:tech_stack`, `mem:suggested_commands`, `mem:conventions`, `mem:task_completion`.
 Project also has a `CLAUDE.md` at repo root with overlapping guidance.

@@ -1,14 +1,12 @@
 # Conventions
 
-- MSRV 1.85.0 — required by the **2024 edition** (PR #6). Do not assume APIs newer
-  than 1.85. Note: clippy honors `rust-version`, so raising the MSRV can activate
-  previously-suppressed lints (e.g. `io_other_error` once `std::io::Error::other`,
-  stable since 1.74, is within MSRV).
-- Edition 2024. The crate migrated cleanly (no source changes from `cargo fix --edition`).
+- Edition 2024 (PR #6). The crate migrated cleanly (no source changes from `cargo fix --edition`).
+  No `rust-version`/MSRV policy is declared in `Cargo.toml`; the only Rust floor is whatever the
+  edition and language features in use (e.g. `let`-chains) require.
 - Keep new functionality feature-gated (`#[cfg(feature = ...)]`) and ensure it still
   compiles/tests under `--no-default-features`.
 - Cached regexes go through `OnceLock` helpers (`get_python_regex`/`get_curly_regex`), not
-  `lazy_static` (deliberately removed in this fork; `OnceLock` stable since 1.70).
+  `lazy_static` (deliberately removed in this fork in favor of `std::sync::OnceLock`).
 - Errors use `thiserror`. Two error types: top-level `Error` (in `lib.rs`) and the serializer's
   `FormatError` (in `formatter.rs`).
 

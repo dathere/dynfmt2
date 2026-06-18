@@ -101,5 +101,5 @@ exact text of `Error`/`FormatError` messages.
 
 ## Conventions
 
-- Edition 2024, which imposes a **Rust 1.85.0** minimum. No explicit `rust-version` policy is declared in `Cargo.toml`, so the only floor is the one the edition itself enforces.
+- Edition 2024.
 - Keep new functionality feature-gated and ensure it compiles/tests under `--no-default-features`.

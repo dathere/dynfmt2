@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 
-- Migrate to the Rust 2024 edition (MSRV is now 1.85.0).
+- Migrate to the Rust 2024 edition.
 - Fix Python `%`-formatting precision and width handling:
   - Apply precision for floats (`%.2f`, `%.*f`) and strings (`%.3s`), which was previously parsed then silently dropped.
   - Measure width in characters rather than bytes, so multi-byte UTF-8 (e.g. `[%5s]` of `"café"`) pads correctly.
@@ -14,7 +14,7 @@
 - Fork of the unmaintained [`dynfmt`](https://github.com/jan-auer/dynfmt) crate, published to crates.io as [`dynfmt2`](https://crates.io/crates/dynfmt2).
 - Add width formatting support to `PythonFormat`.
 - Migrate to the Rust 2021 edition and bump dependencies.
-- Replace the `lazy_static` dependency with `std::sync::OnceLock` (MSRV raised to 1.70).
+- Replace the `lazy_static` dependency with `std::sync::OnceLock`.
 - Numerous clippy and rustfmt cleanups; add `Debug` implementations.
 
 ## 0.1.5

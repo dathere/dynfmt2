@@ -1,8 +1,8 @@
 # Tech Stack
 
-- Language: Rust, edition 2021.
-- MSRV: **Rust 1.70.0** (`rust-version` in `Cargo.toml`). Do not use newer std APIs. The 1.70 pin
-  exists because the fork uses `std::sync::OnceLock` (replacing `lazy_static`).
+- Language: Rust, edition 2024.
+- No `rust-version`/MSRV is declared in `Cargo.toml`. The Rust floor is whatever edition 2024 and
+  the language features in use require (e.g. `let`-chains, stabilized in 1.88).
 - Build/package: Cargo.
 - License: MIT.
 
