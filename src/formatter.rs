@@ -521,6 +521,10 @@ impl<W: io::Write> serde::ser::SerializeStructVariant for SerializeStructVariant
     }
 }
 
+// `'a` is required by the `json`-feature associated types (e.g. `SerializeSeq<'a, W>`),
+// but with `json` off those become `Impossible<..>` and clippy sees `'a` as elidable.
+// Eliding it would break the `json` build, so allow the lint for the `json`-off case.
+#[allow(clippy::needless_lifetimes)]
 impl<'a, W> Serializer for &'a mut Formatter<W>
 where
     W: io::Write,
