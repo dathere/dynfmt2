@@ -627,12 +627,11 @@ impl<'a> ArgumentSpec<'a> {
 
         // Python `%s`/`%r` precision truncates the converted output to N characters,
         // independent of the argument's underlying type (so e.g. `%.3s` of 12345 is "123").
-        if self.precision_truncates {
-            if let Some(precision_val) = precision {
-                if formatted.chars().count() > precision_val {
-                    formatted = formatted.chars().take(precision_val).collect();
-                }
-            }
+        if self.precision_truncates
+            && let Some(precision_val) = precision
+            && formatted.chars().count() > precision_val
+        {
+            formatted = formatted.chars().take(precision_val).collect();
         }
 
         // Apply width formatting if specified
